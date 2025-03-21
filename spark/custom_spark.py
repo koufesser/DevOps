@@ -10,19 +10,21 @@ spark = SparkSession.builder \
                     .getOrCreate()
 
 try:
-    print("0")
-    text_file = sc.textFile(SparkFiles.get("Bible.txt"))
-    print('3')
-    words = text_file.flatMap(lambda line: line.lower().split())
-    print('4')
-    word_counts = words.map(lambda word: (word, 1))
-    print('5')
-    counts = word_counts.reduceByKey(lambda a, b: a + b)
-    print('6')
+    bible_path = SparkFiles.get("Bible.txt") 
+    all_words = []
+    with open(bible_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            words = line.lower().split()
+            for word in words:
+                all_words.append((word, 1))  # Создаем кортеж (word, 1)
+
+    word_rdd = sc.parallelize(all_words)
+
+    counts = word_rdd.reduceByKey(lambda a, b: a + b)
     output = counts.collect()
+
     for (word, count) in output:
         print(f"{word}: {count}")
-
 except Exception as e:
     print(f"Error occurred: {e}")
 
